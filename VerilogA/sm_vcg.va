@@ -1,0 +1,24 @@
+// VerilogA for sm_Pore, sm_vcg, veriloga
+// A very simple voltage controlled conductor (vcg)
+// Sebastian Claudiusz Magierowski Apr 10 2021
+//
+// Apply a "control" voltage, Vc, across (pc,nc).
+// When Vc = -1, min current flows (conductance is lo, pore contains largest k-mer)
+// When Vc = +1, max current flows (conductance is hi, pore contains smallest k-mer)
+// As Vc goes up the conductance should go down.
+// If Rp = 1 GOhm, Gp = 1 nMho 
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module sm_vcg(p, n, pc, nc);
+  parameter real gv = 1; // relative variation around baseline resistance
+  parameter real Ravg = 1e8; // avg resistance
+  inout p, n;
+  inout pc, nc; 
+  electrical p,n,pc,nc;
+
+  analog 
+    I(p,n) <+ (gv*V(pc,nc)+1)*V(p,n)/Ravg;
+
+endmodule

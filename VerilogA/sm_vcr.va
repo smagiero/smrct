@@ -1,0 +1,16 @@
+// VerilogA for SM_Pore, sm_vcr, veriloga
+// A very simple voltage controlled resistor (vcr)
+// Sebastian Claudiusz Magierowski Feb 8 2014
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module sm_vcr(p, n, pc, nc);
+  parameter real r = 0; //resistance (Ohms)
+  inout p, n;
+  input pc, nc;
+  electrical p, n, pc, nc;
+
+  analog
+    V(p,n) <+ r*V(pc,nc)*I(p,n);
+endmodule

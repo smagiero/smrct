@@ -1,0 +1,212 @@
+; Analyzing the Response of a Single Nanopore Model
+; Sebastian Claudius Magierowski Apr 10 2021
+;
+; This script drives a Spectre/VerilogA script that implements a simple model
+; of a nanopore attached to a very ideal opamp (linear VCVS) with R and C feedback
+;
+; Updates
+; Nov 22, 2022
+; S. Magierowski: openResults() wasn't reading /psf, needed to add dc.dc and tran.tran,
+;		          don't know why; update comments
+;
+;
+; -------------------------------------------------------------	
+; START: About this script ------------------------------------
+; 
+; To open this script in nedit with OCEAN highlights (so that it is esasier to read),
+; first launch nedit with the command
+;
+; % nedit -import /local/data1/SM/Cad/misc/ocean.pats &
+;
+; and then just open tbpore_G22.ocn
+; Otherwise you can look at this script in whatever text editor you want
+; (but probably without OCEAN highlights).
+;
+; To run this script (from /local/data1/SM/Cad/analog/scripts):
+;
+; % cad-ocn
+; ocean> load("tbpore_G22.ocn")
+;
+; FYI: You don't need to run from /local/data1/SM/Cad
+; As long as you don't change the organization of the files and directories
+; within /analog you should just be able to:
+;
+; <your-path-of-choice>/analog/scripts % cad-ocn
+; ocean> load("tbpore_G22.ocn")
+;
+; For your information, the relevant file sructure is:
+; tbpore_G22.ocn --> 
+; ../SM_Pore_22/tb_singlepore/netlist/netlistHeader + ../SM_Pore_22/tb_singlepore/netlist/netlist
+;
+;analog
+;----->	scripts
+;	------>	tbpore_G22.ocn
+;----->	SM_Pore_22
+;	------>	tb_singlepore
+;		------>	netlist
+;			------>	netlist (*** put your Spectre netlist here ***) 
+;			------>	netlistFooter
+;			------>	netlistHeader (*** put your Spectre setup commands here ***)
+;			------> sebolog.log (*** where my simulation messages are logged, check here for errors ***)
+;		------>	psf
+;----->	spectre
+;	------>	schematic
+;		------>	netlist
+;		------>	psf
+;----->	VerilogA
+;	------>	sm_vcr.va
+;
+;
+; STOP: About this script -------------------------------------
+; -------------------------------------------------------------	
+;
+;
+; ************* INITIALIZE *************
+; These envSetVal Environment Options are described in: 
+; Virtuoso Analog Design Environment L User Guide (anasimhelp.pdf) Product Version IC6.1.8 June 2020
+envSetVal( "spectre.envOpts" "controlMode" 'string "batch" ) ; Spectre simulation 
+; hangs unless I put this in.  This makes spectre start a new run for every
+; simulation, rather than trying to continue in interactive mode.
+envSetVal( "spectre.outputs" "outputParamInfo" 'boolean nil )
+envSetVal( "spectre.envOpts" "autoDisplay" 'boolean nil )
+envSetVal( "spectre.envOpts" "simExecName" 'string "cad-spec" )
+; Adding this line to keep the OCEAN screen clean of excessive netlist reading messages
+envSetVal( "spectre.envOpts" "userCmdLineOption" 'string "=log sebolog.log" )
+; Enables Fast APS mode for Spectre (anasimhelp.pdf June 2020, p.874) I don't think this works
+envSetVal( "spectre.turboOpts" "apsplus" 'boolean t )
+
+simulator( 'spectre )
+; Specify the path or the name of a design to be simulated, see: 
+; OCEAN Reference Product Version IC6.1.8 October 2019, p. 112
+; (oceanref.pdf) name of file must be "netlist"
+design( "../SM_Pore_22/tb_singlepore/netlist/netlist" )
+resultsDir( "../SM_Pore_22/tb_singlepore" )
+;modelFile( 
+;  '("/CMC/kits/cmosp13/IBM_PDK/cmrf8sf/V1.8.0.4DM/Spectre/models/design.scs")
+;  '("/CMC/kits/cmosp13/IBM_PDK/cmrf8sf/V1.8.0.4DM/Spectre/models/allModels.scs" "tt")
+;)
+; In OCEAN, to see command options, type... 
+; > ocnHelp('option) 
+; Also from UNIX command line can type (cad-spec is my spectre launch script)
+; > cad-spec -h options
+; option command described in OCEAN Reference.  But actual options are NOT discussed
+; Actual options described in Virtuoso® Spectre® Circuit Simulator Reference (spectreref.pdf) and
+; explained when using > spectre -h options from UNIX terminal
+; There are 366 options in Spectre Version 18.1.0.287.isr4 (I give their numbers below)
+; I'm already making sure to save certain currents in my netlistHeader, so I don't need
+; this autosavecurvolt option
+;option('autosavecurvolt "yes")	; 10: Automatically save terminal I & V
+option('inventory  "detailed")	; 111:Print summary of components used
+                         	; (no/brief/detailed/full)
+option('narrate       "yes")	; 112:Narrate the simulation (no/yes)
+option('debug         "yes")	; 113:Give debugging messages (no/yes)
+option('info          "yes")	; 114:Give informational messages (no/yes)
+option('note          "yes")	; 115:Give notice messages (no/yes)
+option('maxnotes          1)	; 116:Max. no. of times note issued per analysis. No effect
+                         	; on notices issues when parsing netlist. 
+option('warn          "yes") 	; 119:Display warning messages (no/yes)
+option('maxnotestologfile  1)	; 122:Max no of times message printed to log file. No
+                               	;     effect on notices due to parsing netlist
+ipi      = 0.31831	; inverse pi (Spectre M_1_PI...built-in Spectre constant)
+; nanopore settings (V_ct = Vbias-Vref)
+Vbias	 =  600m	; cis bias
+Vref	 =  800m	; trans bias (via the opamps +ve terminal)
+Rpore	 =  2G		; pore's average resistance in Ohms (while molecule in pore)
+gvari	 =  0.10	; max relative variation in pore's averge conductance 
+Cmemb	 =  1e-13	; pore's membrane capacitance in F
+; opamp settings
+Rf	 =  100M	; transconductance amp's feedback resistance
+; molecule signal settings
+ft       =  1000        ; avg translocation rate in bp per second bp/s
+; post-simulation signal analysis settings
+fsamp    =  10*ft       ; sampling rate for PSD analysis (relative to ft)
+samples  =  2**16       ; # of samples to use for PSD analysis
+winsize  =  samples/32  ; # the smaller this is the more we avg the PSD we extract
+samptime =  (samples*1.0)/fsamp ; sim time needed to gather samples you need
+stoptime = 1.05*samptime; time over which to run transient simulation
+maxstep  = samptime/100 ; max time step size to use in transient simulation
+
+desVar( "Vbias"	  Vbias ) 
+desVar( "Vref"	  Vref  )
+desVar( "gvari"   gvari ) ; gvari = gv
+desVar( "Rpore"   Rpore ) ; Rpore = Rp
+desVar( "Cmemb"   Cmemb ) ; Cmemb = Cm
+desVar( "Rf"      Rf )
+desVar( "ft"      ft )
+desVar( "stoptime" stoptime )
+desVar( "maxstep"  maxstep )
+; Analysis flags
+f_DC = 1   ; DC simulation of pore
+f_AC = 1   ; AC/DC simulation of pore
+f_TRAN = 1 ; TRAN/DC simulation of pore
+clearAll()
+;delete('analysis)
+;=========================================================================
+;1.) DC Sweep of Vbias
+;=========================================================================
+if( (f_DC == 1) then
+  analysis('dc ?saveOppoint t ?save "allpub" ?param "Vbias" ?start -1 \
+               ?stop 1 ?step 0.02)
+  ; can just use run(), but keeping this for now in case it becomes important later	       
+  run(?block t) ;https://community.cadence.com/cadence_technology_forums/f/custom-ic-design/48489/warning-ocn-6038-results-dc-are-not-available-loading-ocean-script
+  openResults( "../SM_Pore_22/tb_singlepore/psf/dc.dc" )
+  selectResults('dc)
+  iporeDC = getData("PORE1.Ra:i" ?result "dc"); <===== DC current through 
+  ;                                                     the pore
+  ; Note that the way Ra's node order is defined in the circuit the current
+  ; reported will be that flowing OUT of the pore (from ndA to out).
+  ;------------------------- Plot -------------------------
+  plot(iporeDC ?expr '("1. DC Current Flowing Out of Pore")); Ipore-Vbias
+  awvSetXAxisLabel(currentWindow() "Vbias [V]")
+  awvSetYAxisLabel(currentWindow() 1 "Ipore")
+)
+;--------------------------------------------------------
+;--------------------------------------------------------
+;=========================================================================
+;2.) AC Sweep of Vbias
+;=========================================================================
+if( (f_AC == 1) then
+  Vbias = -200m
+  Vref  =  800m
+  desVar( "Vbias" Vbias )
+  desVar( "Vref"  Vref  )
+  analysis('dc ?saveOppoint t ?save "allpub")
+  analysis('ac ?start 1k ?stop 1M ?dec 50 ?save "allpub")
+  run('ac, 'dc)
+)
+;=========================================================================
+;3.) Transient Analysis
+;=========================================================================
+; Curious about what options you have in your analysis run? In the OCEAN
+; environment type > ocnHelp('analysis)
+if( (f_TRAN == 1) then
+  analysis('dc ?saveOppoint t ?save "allpub")
+  analysis('tran ?start 0 ?stop "stoptime" ?maxstep "maxstep" ?save "allpub")
+  run('dc, 'tran)
+  openResults( "../SM_Pore_22/tb_singlepore/psf/tran.tran.tran" )
+  selectResults('tran)
+  vctrl = v("ctrl")
+  vout1 = v("aout1")+Vbias
+  iout = i("Rintoamp:i" ?result "tran") ; The current out of the nanopore 
+  ; and into the rest of the circuit hence out of the pore.
+  ;iout = getData("Rintoamp:i" ?result "tran") ; This also works to get i
+  plot(iout ?expr '("Nanopore output current"))
+  ;newWindow()
+  plot(vout1 ?expr '("Buffer pre-amp output voltage"))
+  ;plot(iout vout1 ?expr '("Current", "Voltage")); Another way to get 2 plots
+  plot(vctrl ?expr '("Control") ?strip 2)
+  plot(v("in1") ?expr '("Input") ?strip 3)
+  newWindow()
+  PSDnrz = psd(v("in1"), 0.01*samptime, 1.01*samptime, samples, ?windowName 'Rectangular, ?windowSize winsize)
+  PSDnrzN = PSDnrz*2*ft
+  PSDanrz = psd(v("in2"), 0.01*samptime, 1.01*samptime, samples, ?windowName 'Rectangular, ?windowSize winsize)
+  PSDanrzN = PSDanrz*1*ft
+  PSDnrzNclip  = clipX(db10(PSDnrzN), 1, 0.99*fsamp/2)
+  PSDanrzNclip = clipX(db10(PSDanrzN), 1, 0.99*fsamp/2)
+  ;plot(clipX(db10(PSDnrzN), 1, 0.99*fsamp/2) ?expr '("Pnrz"))
+  ;ocnSetAttrib(?XScale 'log)
+  plot(PSDnrzNclip PSDanrzNclip ?expr '("Pnrz", "Panrz"))
+  ;winID = awvGetCurrentWindow()
+  ;awvLogXAxis(winID 1 t)
+  ocnSetAttrib(?XScale 'log)
+)

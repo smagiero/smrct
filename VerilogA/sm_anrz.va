@@ -1,0 +1,74 @@
+// Exp_Pulse_Train_2
+// A random aperiodic pulse train with two levels and 
+// exponentially distributed pulse width.
+//
+// Sebastian Claudiusz Magierowski Apr 11 2021
+
+`include "discipline.h"
+`include "constants.h"
+
+//--------------------
+// l2_exp_pulse_train
+//
+// -  random pulse stream generator
+//
+// vout:	[V]
+//
+// INSTANCE parameters
+//    Tp   = avg pulse width [s]
+//    seed = seed for pulse height and width []
+//    l_hi = output voltage for high [V]
+//    l_lo = output voltage for low  [V]
+//    tdel, trise, tfall = {usual} [s]
+//
+// MODEL parameters
+//    {none}
+//
+// This model generates a random stream of pulses (from a library
+// of two levels) with exponentially distributed duration.
+//
+(* instrument_module *) // see: Cadence Verilog-A Language Reference
+// Product Version 19.1 June 2020, p.561 (veriaref.pdf)
+module exp_pulse_train_2 (vout);
+output vout;
+electrical vout;
+parameter real Tp = 1 from (0:inf);
+parameter integer seed = 21;
+parameter real l_hi = 5;
+parameter real l_lo = 0 ;
+parameter real tdel=0 from [0:inf);
+parameter real trise=1n;
+parameter real tfall=1n;
+
+   real next;
+   real tnext;
+   integer bit;
+
+   real vout_val;
+   integer iseed;
+
+   analog begin
+      @ ( initial_step ) begin // only done at beginning of analysis
+	 tnext = $rdist_exponential(seed, Tp);
+	 next = $abstime + tnext;
+	 bit = 0;
+	 iseed = seed;
+	 vout_val = l_lo;
+      end
+
+      $bound_step(tnext); // specify the maximum time allowed between time points
+
+      bit = abs($random(iseed)) & 1; // gen 32-b random # (it will be even or odd)
+      @ ( timer( next )) begin
+         vout_val = (l_hi - l_lo) * bit + l_lo;
+	 tnext = $rdist_exponential(iseed, Tp);
+	 next = next + tnext;
+      end
+      //$display ("Time is %g", tnext*1.0);
+      V(vout) <+ transition(vout_val,tdel,trise,tfall);
+    end
+endmodule
+
+
+
+

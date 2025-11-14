@@ -1,0 +1,34 @@
+! Syntax highlighting patterns for SystemVerilog
+!
+! INSTALLATION
+!
+! Load this pattern by starting nedit with:
+!
+!       nedit -import <name of this file>
+!
+! Then, check that the patterns were loaded correctly, and choose Save Defaults
+! from the Preferences menu.  The new patterns will now be incorporated into
+! your own .nedit file, so the next time you start NEdit, you will no longer
+! need to use -import.
+!
+! These comments will not appear in your ~/.nedit
+!
+nedit.highlightPatterns: SystemVerilog:1:0{\n\
+  Comment:"/\\*":"\\*/"::Comment::\n\
+  cplus comment:"//":"$"::Comment::\n\
+  String Literals:"""":"""":"\\n":String::\n\
+  preprocessor line:"^[ ]*`":"$"::Preprocessor::\n\
+  Reserved WordsA:"(?<!\\Y)(alias|always|always_comb|always_ff|always_latch|assert|assert_strobe|assign|assume|automatic|attribute|before|begin|bind|bins|binsof|break|case|case[xz]|clocking|config|constraint|context|continue|cover|covergroup|coverpoint|cross|deassign|defparam|default|design|dist|do|else|end|endattribute|endcase|endclass|endclocking|endconfig|endfunction|endgenerate|endgroup|endinterface|endmodule|endpackage|endprimitive|endprogram|endproperty|endspecify|endsequence|endtable|endtask|expect|export|extends|extern|final|first_match|for|force|foreach|fork|forkjoin|forever|function|generate|genvar|if|iff|ifnone|ignore_bins|illegal_bins|import|incdir|include|initial|inside|instance|interface|intersect|join|join_any|join_none|liblist|library|local|localparam|matches|module|modport|new|noshowcancelled|null|package|parameter|primitive|priority|program|property|protected|pulsestyle_onevent|pulsestyle_ondetect|pure|rand|randc|randcase|randsequence|release|return|sequence|showcancelled|solve|specify|super|table|task|this|throughout|timeprecision|timeunit|type|typedef|unique|use|wait|wait_order|while|wildcard|with|within|;)(?!\\Y)":::Keyword::\n\
+  Predefined Types:"<(and|bit|buf|bufif[01]|byte|cell|chandle|class|cmos|const|disable|edge|enum|event|highz[01]|initial|inout|input|int|integer|join|large|logic|longint|macromodule|medium|nand|negedge|nmos|nor|not|notif[01]|or|output|packed|parameter|pmos|posedge|pull[01]|pulldown|pullup|rcmos|real|realtime|ref|reg|repeat|rnmos|rpmos|rtran|rtranif[01]|scalared|shortint|shortreal|signed|small|specparam|static|string|strength|strong[01]|struct|supply[01]|tagged|time|tran|tranif[01]|tri[01]?|triand|trior|trireg|union|unsigned|uwire|var|vectored|virtual|void|wait|wand|weak[01]|wire|wor|xnor|xor)>":::Storage Type::D\n\
+  System Functions:"\\$[a-z_]+":::Subroutine::D\n\
+  Numeric Literals:"(?<!\\Y)([0-9]*'[dD][0-9xz\\\\?_]+|[0-9]*'[hH][0-9a-fxz\\\\?_]+|[0-9]*'[oO][0-7xz\\\\?_]+|[0-9]*'[bB][01xz\\\\?_]+|[0-9.]+((e|E)(\\\\+|-)?)?[0-9]*|[0-9]+)(?!\\Y)":::Numeric Const::\n\
+  Delay Word:"(?<!\\Y)((#\\(.*\\))|(#[0-9]*))(?!\\Y)":::Ada Attributes::D\n\
+  Simple Word:"([a-zA-Z][a-zA-Z0-9]*)":::Plain::D\n\
+  Instance Declaration:"([a-zA-Z][a-zA-Z0-9_]*)([ \\t]+)([a-zA-Z][a-zA-Z0-9_$]*)([ \\t]*)\\(":::Plain::\n\
+  Module name:"\\1":""::Identifier:Instance Declaration:C\n\
+  Instance Name:"\\3":""::Identifier1:Instance Declaration:C\n\
+  Pins Declaration:"(?<!\\Y)(\\.([a-zA-Z0-9_]+))>":::Storage Type1::\n\
+  Special Chars:"(\\{|\\}|,|;|=|\\.)":::Keyword::\n\
+  }
+nedit.languageModes: 	SystemVerilog:.sv .svh::::::
+! Alan Fitch, Doulos 2011-02-20

@@ -35,3 +35,7 @@ input.*/
 amap/
 ihnl/
 *.ahdlSimDB
+
+# Other stuff
+DVEfiles/
+

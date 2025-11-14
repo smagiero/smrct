@@ -1,0 +1,53 @@
+ HSPICE/SPICE syntax colouring mode v1.0, for NEdit-5.1
+! Created and Maintained by: Guy Griffin guy.grffin@freeuk.com Jan 2000
+!
+! I made this colouring mode to help write & debug hspice decks, and it
+! should work for B-/P-SPICE too. I've tried to make it reject all the
+! odd little things hspice doesn't like, and colour incorrect
+! lines red/bold.
+!
+!
+! INSTALLATION
+!
+! Load these macros and/or background menu commands by starting nedit with:
+!
+!       nedit -import <name of this file>
+!
+! Check that the macros and/or background menu commands were loaded
+! correctly, and choose "Save Defaults" from the Preferences menu.  The
+
+! new colouring patterns will now be incorporated into your own .nedit
+! file, so the next time you start NEdit, you will no longer need to use
+! -import.
+!
+
+nedit.fileVersion: 5.1
+nedit.highlightPatterns: HSpice mt data:1:0{\n\
+  numeric const:"<[\\-+]?(\\.?\\d+|\\d+\\.\\d*)(?i[ed][\\-+]?\\d+)?>":::Numeric Const::\n\
+  variable:"<\\l[\\w#]*>":::Identifier::\n\
+  data:"^\\$DATA":"$"::Comment::\n\
+  title:"^\\.TITLE":"$"::Comment::\n\
+  }\n\
+  HSPICE SPICE:2:256{\n\
+  hspice error:"\\*\\*(?ierror|warning)\\*\\*":"$"::Error::\n\
+  comment:"^\\*|<\\$":"$"::Comment::\n\
+  number:"<[\\-+]?(\\.?\\d+|\\d+\\.\\d*)(?i[ed][\\-+]?\\d+|meg|mil|[fgkmnpu])?((?i[a-hj-np-z]*))>":::Numeric Const::\n\
+  units prefix:"\\2":""::Comment:number:C\n\
+  statements:"^\\.(?iac|data|dc|dcvolt|del lib|disto|enddata|endl|fft|four|global|graph|ic|inc|include|lib|load|macro|meas|measure|model|net|nodeset|noise|op|opt|option|options|param|plot|print|probe|prot|protect|pz|sample|save|sens|subckt|temp|tf|tran|unprot|unprotect|wid|width)>":::Keyword::\n\
+  empty statements:"^\\.(?ititle|ends|end|eom|alter)>(\\s+.*)?":::Keyword::\n\
+  statement comments:"\\1":""::Comment:empty statements:C\n\
+  line continue:"^\\+\\s":::Keyword::\n\
+  element:"^(?i[C-MQRTUVX])([^\\s\\(\\)\\.'\\[\\]=]{1,15})>":::Spice Element::\n\
+  element name:"\\1":""::Spice Element Name:element:C\n\
+  expression:"<'":"'>"::String::\n\
+  filename:"<""":""">":"$":Character Const::\n\
+  output variable:"<[vViI]\\s*\\(.*?\\)>":::Identifier1::\n\
+  bad statement:"^(?i(?:[^\\*\\.\\+C-MQRTUVX])|(?:[\\.C-MQRTUVX]\\s)).*$":::Error::\n\
+  }
+nedit.languageModes: 	HSpice mt data:.mt0 .mt1 .mt2 .mt3 .mt4 .mt5:"\\$DATA":::::"'""="\n\
+  HSPICE SPICE:.sp .spice .iclib .iclib_si .iclib2 .modlib .pkg .board .meas .inc .include .lib::None:None:::",=()"
+nedit.styles: Spice Element:salmon:Bold\n\
+  Comment:OrangeRed:Italic\n\
+  Spice Element Name:blue:Plain\n\
+  Error:red:Bold
+	

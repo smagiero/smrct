@@ -1,0 +1,68 @@
+ Syntex highlighting patterns for Spectre
+! Sebastian Claudiusz Magierowski Apr 15, 2015
+!
+! INSTALLATION
+!
+! Load this pattern by starting nedit with:
+!
+!       nedit -import <name of this file>
+!
+! Then, check that the patterns were loaded correctly, and choose Save Defaults
+! from the Preferences menu.  The new patterns will now be incorporated into
+! your own .nedit file, so the next time you start NEdit, you will no longer
+! need to use -import.
+!
+! These comments will not appear in your ~/.nedit
+! 
+nedit.highlightPatterns: Spectre:1:0{\n\
+  Comment:"//":"$"::Comment::\n\
+  String Literals:"""":"""":"\\n":String::\n\
+  Reserved Master:"((([a-zA-Z0-9_(^.)]*)(\=))|(([a-zA-Z0-9_(^.)]*)\\s+(\=)))":::ResFuncSettings::\n\
+  Reserved Words:"(?<!\\Y)(ends|global|include|options|parameters|simulator |save |subckt|subsckts|ahdl_include)":::Keyword::\n\
+  Reserved Analysis:"(?<!\\Y)(ac|alter|dc|info|noise|tran|pss|pac|pxf|pnoise|qpss)(\\s+)":::Keyword::\n\
+  Subckt Name:"(?<=(subckt|ends))\\s+[\\w]*":::SubcktName::\n\
+  Instance DeclarationP13:"([a-zA-Z0-9_]*)([ \\t]+)\\(([a-zA-Z0-9_!\\s+]*)\\)([ \\t]+)\
+(dgnfet|dgnfettw_psp|nfet|nfet33|dgpfet|dgpfet_psp|pfet|pfet33)":::Keyword::\n\
+  Instance Name:"\\1":""::InstanceName:Instance DeclarationP13:C\n\
+  Instance MasterP13:"\\5":""::P13ModelName:Instance DeclarationP13:C\n\
+  Instance DeclarationRes:"([a-zA-Z0-9_]*)([ \\t]+)\\(([a-zA-Z0-9_!\\s+]*)\\)([ \\t]+)\
+(capacitor|inductor|isource|resistor|vcvs|vsource)":::Keyword::\n\
+  Instance Name:"\\1":""::InstanceName:Instance DeclarationRes:C\n\
+  Instance MasterRes:"\\5":""::ReservedMaster:Instance DeclarationRes:C\n\
+  Instance Declaration:"([a-zA-Z0-9_]*)([ \\t]+)\\(([a-zA-Z0-9_!\\s+]*)\\)([ \\t]+)([a-zA-Z0-9_]*)":::Keyword::\n\
+  Instance Name:"\\1":""::InstanceName:Instance Declaration:C\n\
+  Instance Master:"\\5":""::InstanceMaster:Instance Declaration:C\n\
+}
+nedit.languageModes: 	Spectre:.scs .ckt::::::
+nedit.styles: Core Element:red:Bold\n\
+  Core Element Name:red:Plain\n\
+  P13ModelName:RoyalBlue4:Bold\n\
+  SubcktName:red:Bold\n\
+  SubcktInvoke:red:Plain\n\
+  InstanceName:red:Bold\n\
+  InstanceMaster:VioletRed:Plain\n\
+  ReservedMaster:VioletRed:Bold\n\
+  ResFuncSettings:RoyalBlue4:Italic\n\
+  Comment:OrangeRed:Italic
+! *** Note how extra spaces \s and words \w, are actually said with \\s and \\w
+! *** This looks for: (anyword without a decimal in it)(that's next to an =) OR (anyword without a decimal in it)(that's some whitespace from =)
+!    Reserved Master:"((([a-zA-Z0-9_(^.)]*)(\=))|(([a-zA-Z0-9_(^.)]*)\\s+(\=)))":::ResFuncSettings::\n\
+! *** Reserved Words: looks for patterns starting at word gaps
+! *** Subckt Name: looks for subcircuit names occurring after subckt and ends
+! *** Instance DeclarationP13
+! *** Subckt Invoke:"(?<=\\))\\s+[\\w]*":::SubcktInvoke::\n\
+! *** Reserved Function Settings:"(?=([a-zA-Z0-9_])*\\s+(\=))([a-zA-Z0-9_]*)":::ResFuncSettings::\n\
+!  P13 Model Name:"(bondpad|coupledcpw|coupled_cpw|coupledwires|design|dgncap|\
+! dgnfet_psp|dgnfet_rf_psp|dgnfet_rf|dgnfet|dgnfettw_psp|dgnfettw_rf_psp|\
+! dgnfettw_rf|dgnfettw|dgpfet_psp|dgpfet_rf|dgpfet|diffhavar|diffncap|diodenwx|\
+! diodenx|diodepisx|diodepnw|diodepwpi|dipdnw|divpnp|dualmimcap|efuse|est_modules|\
+! esdndsx|esdnsh_base|esdnsh_spe|esdscr|esdvpnp|gsnap|hacap|havar|hvtnfet33_rf|\
+! hvtnfet33|hvtnfet33tw_rf|hvtnfet33tw|hvtpfet33_rf|hvtpfet33|indp |ind |inds |\
+! indstack|kxres|l1res|lpnfet_rf|lpnfet|lpnfettw_rf|lppfet_rf|lppfet|\
+! lvtnfet_rf|lvtnfet|lvtnfettw_rf|lvtnfettw|lvtpfet_rf|lvtpfet|mimcap|mvcap|ncap|\
+! nfet33_rf|nfet33|nfet33tw_rf|nfet33tw|nfet_psp|nfet_rf_psp|nfet_rf|nfet|\
+! nfettw_psp|nfettw_rf_psp|nfettw_rf|nfettw|nwres|opndres|opppcres|oprppres|\
+! oprrpres|pcapc|pfet33_rf|pfet33|pfet_psp|pfet_rf_psp|pfet_rf|pfet|rfline|\
+! sbd|sblkndres|silres|singlecpw|single_cpw|singlewire|subc |symindp|tdndsx|\
+! tdpdnw|vncap|zvtdgnfet|zvtnfet)":::P13ModelName::\n\
+

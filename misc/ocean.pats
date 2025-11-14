@@ -1,0 +1,81 @@
+! Syntex highlighting patterns for Ocean
+! Sebastian Claudiusz Magierowski Jun 12 2023
+!
+! INSTALLATION
+!
+! Load this pattern by starting nedit with:
+!
+!       nedit -import <name of this file>
+!
+! Then, check that the patterns were loaded correctly, and choose Save Defaults
+! from the Preferences menu.  The new patterns will now be incorporated into
+! your own .nedit file, so the next time you start NEdit, you will no longer
+! need to use -import.
+!
+! These comments will not appear in your ~/.nedit
+!
+nedit.highlightPatterns: Ocean:1:0{\n\
+  Comment:"/\\*":"\\*/"::Comment::\n\
+  cplus comment:";":"$"::Comment::\n\
+  String Literals:"""":"""":"\\n":String::\n\
+  preprocessor line:"^[ ]*`":"$"::Preprocessor::\n\
+  Keyword:"<(if|unless|when|for|foreach|while|case|cond)>":::Keyword::\n\
+  Reserved WordsEnv:"(?<!\\Y)(appendPath|csh|envSetVal|path|prependPath|\
+setup|sh|history|;)(?!\\Y)":::Keyword::\n\
+  Reserved WordsSim:"(?<!\\Y)(ac|analysis|autostop|converge|connectRules|\
+createFinalNetlist|dc|definitionFile|delete|design|desVar|discipline|\
+displayNetlist|envOption|evcdFile|evcdInfoFile|forcenode|globalSigAlias|\
+globalSignal|ic|includeFile|modelFile|nodeset|noise|ocnDisplay|\
+ocnGetWaveformTool|ocnWaveformTool|off|option|psp|pss|restore|resultsDir|\
+run|save|saveOption|selectResults|simulator|solver|sp|stimulusFile|store|\
+sprintf|temp|tran|vcdFile|vcdInfoFile|vecFile|hlcheck|yp|zp|;)(?!\\Y)":::Keyword::\n\
+  Reserved WordsDat:"(?<!\\Y)(closeResults|dataTypes|getData|getResult|i|ocnHelp|\
+openResults|outputParams|outputs|phaseNoise|pv|resultParam|\
+results|selectResult|sweepNames|sweepValues|sweepVarValues|\
+v|vswr|zm|zref|;)(?!\\Y)":::Keyword::\n\
+  Reserved WordsPlt:"(?<!\\Y)(awvGetCurrentWindow|awvLogXAxis|awvLogYAxis|awvSetXAxisLabel|\
+awvSetXAxisMajorDivisions|awvSetYAxisLabel|awvSetYAxisMajorDivisions|\
+addSubwindow|addSubwindowTitle|addTitle|addWaveLabel|\
+addWindowLabel|clearAll|clearSubwindow|currentSubwindow|currentWindow|\
+dbCompressionPlot|dcmatchSummary|deleteSubwindow|deleteWaveform|displayMode|\
+getAsciiWave|gaphicsOff|graphicsOn|hardCopy|hardCopyOptions|ip3Plot|newWindow|\
+noiseSummary|ocnPrint|ocnSetAttrib|ocnYvsYplot|plot|plotStyle|pzPlot|pzSummary|removeLabel|\
+report|xLimit|yLimit|;)(?!\\Y)":::Keyword::\n\
+  Predefined ArithFn:"<(abs|acos|add1|asin|atan|cos|exp|int|linRg|log|logRg|\
+max|min|mod|random|round|sin|sqrt|srandom|sub1|tan|xor)>":::OcnFn::\n\
+  Predefined WaveFn:"<(average|awvPlaceXMarker|awvPlaceYMarker|b1f|bandwidth|\
+clip|compression|compressionVRI|compressionVRICurves|conjugate|\
+complex|complexp|convovle|cPwrContour|cReflContour|cross|db10|db20|\
+dbm|delay|deriv|dft|dftbb|evmQpsk|eyeDiagram|flip|fourEval|freq|frequency|\
+ga|gac|gainBwProd|gainMargin|gmax|gmin|gmsg|gmux|gp|gpc|groupDelay|gt|\
+harmonic|harmonicFreqList|harmonicList|iinteg|imag|integ|intersect|ipn|\
+ipnVRI|ipnVRICurves|kf|ln|log10|lsb|lshift|mag|nc|overshoot|peakToPeak|\
+phase|phaseDeg|pahseDegUnwrapped|phaseMargin|phaseRad|phaseRadUnwrapped|\
+pow|psd|psdbb|real|riseTime|rms|rmsNoise|root|rshift|sample|settlingTime|\
+slewRate|spectralPower|ssb|stddev|tangent|thd|value|xmax|xmin|xval|ymax|ymin)>":::OcnFn::\n\
+  Predefined SkillFn:"<(append|append1|begin|bitfield1|bitfield|buildString|\
+car|caar|caaar|caadr|cadr|caddr|cdar|cddr|car|case|caseq|cdr|\
+ceiling|changeWorkingDir|charToInt|close|compareTime|compress|\
+concat|cond|cons|constar|copy|cputime|createDir|deleteDir|deleteFile|\
+fix|float|floatp|floor|forall|fprintf|fscanf|fscanf|scanf|sscanf|\
+get_filename|list|log10|map|mapc|mapcan|mapcar|maplist|measureTime|\
+member|mod|modulo|newline|nil|null|printf|println|readTable|sort|strlen|reverse)>":::SkillFn::\n\
+  System Functions:"\\$[a-z_]+":::Subroutine::D\n\
+  Numeric Literals:"(?<!\\Y)([0-9]*'[dD][0-9xz\\\\?_]+|[0-9]*'[hH][0-9a-fxz\\\\?_]+|[0-9]*'[oO][0-7xz\\\\?_]+|[0-9]*'[bB][01xz\\\\?_]+|[0-9.]+((e|E|f|G|k|m|M|p|u|n)(\\\\+|-)?)?[0-9]*|[0-9]+)(?!\\Y)":::Numeric Const::\n\
+  Delay Word:"(?<!\\Y)((#\\(.*\\))|(#[0-9]*))(?!\\Y)":::Ada Attributes::D\n\
+  Simple Word:"([a-zA-Z][a-zA-Z0-9]*)":::Plain::D\n\
+  Pins Declaration:"(?<!\\Y)(\\.([a-zA-Z0-9_]+))>":::Storage Type1::\n\
+  Function Arguments:"([\?][a-zA-Z]*)":::FuncArgs::\n\
+  Reserved Function Settings:"(['][a-zA-Z_]*)":::ResFuncSettings::\n\
+  }
+nedit.languageModes: 	Ocean:.oc .ocn::::::
+nedit.styles: SkillFn:red3:Italic\n\
+ OcnFn:red3:Plain\n\
+ FuncArgs:RoyalBlue4:Bold\n\
+ ResFuncSettings:RoyalBlue4:Italic\n\
+ Comment:OrangeRed:Italic
+! Sebastian Magierowski Apr. 10, 2015
+! Instance Declaration:"([a-zA-Z][a-zA-Z0-9_]*)([ \\t]+)([a-zA-Z][a-zA-Z0-9_$]*)([ \\t]*)\\(":::Plain::\n\
+! Module name:"\\1":""::Identifier:Instance Declaration:C\n\
+! Instance Name:"\\3":""::Identifier1:Instance Declaration:C\n\
+! Special Chars:"(\\{|\\}|,|;|=|\\.)":::Keyword::\n\
