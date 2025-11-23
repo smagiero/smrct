@@ -29,12 +29,24 @@ build*/
 # Cadence stuff
 *.dump
 .cadence/
+
+# Spectre stuff
 psf/
 psf*/
 input.*/
 amap/
 ihnl/
 *.ahdlSimDB
+.controlStatements
+.definitionFiles
+.designVariables
+.ignore*
+.modelFiles
+.otherParams
+.specialFilesInclude
+.stimulusFiles
+.thermalNode
+ade_e.scs 
 
 # Other stuff
 DVEfiles/
