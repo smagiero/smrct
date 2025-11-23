@@ -1,0 +1,36 @@
+; Nanopore I-V Characterization Script (OCEAN Legacy Workflow)
+; Sebastian Claudiusz Magierowski Nov 23 2025
+; Drives a Spectre simulation to characterize the I-V response of a nanopore model
+; implemented as a resistor and capacitor in parallel.
+
+; Simulator setup
+simulator('spectre)
+design("../../testbenches/ocean/tb_iv")  ; Points to directory with netlist/ subdirectory
+resultsDir("../../results/ocean/iv")
+; Environment options
+envSetVal("spectre.envOpts" "controlMode" 'string "batch")
+envSetVal("spectre.outputs" "outputParamInfo" 'boolean nil)
+envSetVal("spectre.envOpts" "autoDisplay" 'boolean nil)
+envSetVal("spectre.envOpts" "simExecName" 'string "cad-spec")
+envSetVal("spectre.envOpts" "userCmdLineOption" 'string "=log ../../results/ocean/iv/spectre.log")
+; Analysis setup
+analysis('dc ?param "dc" ?start 0 ?stop 1.0 ?step 0.02)
+; What to save (override netlist if needed)
+save('i "/V1/PLUS")  ; Current through voltage source
+save('v "p")         ; Voltage at node p
+
+; Run simulation
+run(?block t)
+
+; Post-processing
+openResults("../../results/ocean/iv")
+ocnPrint(?output "../../results/ocean/iv/iv_data.txt"
+         ?numberNotation 'scientific
+         getData("p" ?result "dc")
+         getData("/V1/PLUS" ?result "dc"))
+
+; Plot (optional - creates display if interactive)
+plot(getData("p" ?result "dc") getData("/V1/PLUS" ?result "dc"))
+
+; Print summary
+printf("OCEAN simulation complete. Results in ../../results/ocean/iv/\n")

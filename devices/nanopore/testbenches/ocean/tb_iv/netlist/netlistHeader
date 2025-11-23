@@ -1,0 +1,8 @@
+// Nanopore DC I-V Testbench - OCEAN Header
+// Sebastian Claudiusz Magierowski Nov 23 2025
+// DC sweep analysis
+simulator lang=spectre
+// Include the nanopore netlist
+include "../../../netlist/nanopore.scs"  // Three levels up
+// Top-level testbench
+parameters vstart=0 vstop=1 vstep=0.01

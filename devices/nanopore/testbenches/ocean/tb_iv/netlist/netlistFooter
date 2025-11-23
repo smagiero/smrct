@@ -1,0 +1,6 @@
+// DC analysis
+dc1 dc dev=V1 param=dc start=vstart stop=vstop step=vstep
+
+// Save outputs
+save XP1:p XP1:n
+saveOptions options save=selected

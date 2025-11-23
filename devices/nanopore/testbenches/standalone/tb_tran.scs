@@ -1,0 +1,31 @@
+// Nanopore Transient Testbench - PLACEHOLDER
+// Sebastian Claudiusz Magierowski Nov 23 2025
+// Transient analysis for nanopore device
+simulator lang=spectre
+
+// TODO: Implement transient testbench
+// Suggested features:
+// - Pulse/step voltage excitation
+// - Transient analysis to observe RC time constant
+// - Current sensing through nanopore
+// - Investigation of capacitive charging effects
+
+// Include the nanopore netlist
+include "../netlist/nanopore.scs"
+
+// Top-level testbench
+parameters vstep=0.5 trise=1n tfall=1n tpw=100n tstop=500n
+
+// Nanopore instance
+XP1 (p 0) nanopore
+
+// Voltage source - pulse stimulus
+V1 (p 0) vsource type=pulse val0=0 val1=vstep rise=trise fall=tfall width=tpw period=2*tpw
+
+// Transient analysis
+tran1 tran stop=tstop
+
+// Save outputs
+save XP1:p XP1:n
+save V1:p
+saveOptions options save=selected

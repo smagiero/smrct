@@ -1,0 +1,5 @@
+// Nanopore instance
+XP1 (p 0) nanopore
+
+// Voltage source for DC sweep
+V1 (p 0) vsource dc=vstart

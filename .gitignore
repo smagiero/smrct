@@ -49,7 +49,18 @@ ihnl/
 .stimulusFiles
 .thermalNode
 *.psf
-ade_e.scs 
+ade_e.scs
+*.scs.scs
+*.raw
+*.tr0
+*.ac0
+*.sw0
+*.mt0
+*.dc0
+*.log.status
+*.log.summary
+*_specs.sdb
+input.scs 
 
 # Virtuoso artifacts (if you import for viewing)
 *.oa
