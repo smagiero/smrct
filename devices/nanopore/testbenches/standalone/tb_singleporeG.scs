@@ -1,0 +1,83 @@
+// Nanopore + CT TIA Testbench
+// Sebastian Claudiusz Magierowski  Apr 10 2021 — standalone Spectre port May 3 2026
+//
+// Topology:
+//   sm_nanoporeG (bias/out/ctrl) driven by Vbias/Vref DC bias.
+//   Pore output current sensed by ideal CT TIA (VCVS op-amp, Cf+Rf feedback).
+//   ctrl driven by exp_pulse_train_2 (exponentially-distributed random pulse train)
+//   to emulate molecule translocation events.
+//
+//       ,-------------- Cm -----------------,
+//       |                                   |
+// (bias)-- Rp --(ndB)-- IG --(ndA)-- Ra --(out)
+// (ctrl) ----------------'
+//
+//                 ,------Cf------,
+//                 |------Rf------|
+// Vctrl -----,    |              |
+// Vbias -- PORE1 --- -OpAmp \    |
+//                 |          \   |
+//                 Ci          X--+-,
+//                            /     |
+// Vref  ------------ +OpAmp /      Cl
+//
+// Key design variables:
+//   Nanopore : gv, Ravg, Rp, Ra, Cm
+//   Biasing  : Vbias (cis), Vref (trans / TIA reference)
+//   TIA      : Rf, Cf, Ci, Cl
+//   Stimulus : ft (mean event rate), Tp=1/ft
+
+simulator lang=spectre
+    
+ahdl_include "../../../../models/verilogA/sm_anrz.va"
+include "../../netlist/nanopore.scs"
+
+// -----------------------------------------------------------------------
+// Parameters
+// -----------------------------------------------------------------------
+parameters \
+    Cf=100f  Ci=100f  Cl=1p  Rf=1G   \
+    Ravg=2.25G  Rp=1  Ra=1  gv=0.5  Cm=5p  \
+    Vbias=600m  Vref=800m               \
+    ft=1k  Tp=1/ft                      \
+    tstop=10m  tstep=100n
+
+// -----------------------------------------------------------------------
+// Nanopore instance
+// -----------------------------------------------------------------------
+Vbias (bias 0) vsource dc=Vbias type=dc
+Vref  (iplus 0) vsource dc=Vref  type=dc
+
+XP1 (bias out ctrl) nanopore gv=gv Ravg=Ravg Rp=Rp Ra=Ra Cm=Cm
+
+// -----------------------------------------------------------------------
+// Pore output ammeter -> TIA virtual ground
+// -----------------------------------------------------------------------
+AMporeout (out net28) vsource mag=0 type=dc
+
+// -----------------------------------------------------------------------
+// CT TIA: ideal op-amp (VCVS) + Cf/Rf feedback + Ci/Cl parasitics
+// -----------------------------------------------------------------------
+OpAmp  (net034 0 iplus net28) vcvs gain=1e6
+Iprobe (net034 out1)          iprobe
+Cf     (net28 out1)           capacitor c=Cf
+Rf     (net28 out1)           resistor  r=Rf
+Ci     (net28 0)              capacitor c=Ci
+Cl     (out1  0)              capacitor c=Cl
+
+// -----------------------------------------------------------------------
+// Stimulus: random exponential pulse train on ctrl
+// -----------------------------------------------------------------------
+Vrand (ctrl) exp_pulse_train_2 Tp=Tp seed=21 l_hi=1 l_lo=-1 tdel=0 \
+    trise=1n tfall=1n
+
+// -----------------------------------------------------------------------
+// Simulation
+// -----------------------------------------------------------------------
+simulatorOptions options reltol=1e-3 vabstol=1e-6 iabstol=1e-12 \
+    temp=27 tnom=27 maxnotes=5 maxwarns=5
+
+tran1 tran stop=tstop step=tstep errpreset=moderate annotate=status
+
+save out1 AMporeout:p
+saveOptions options save=selected

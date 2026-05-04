@@ -1,17 +1,27 @@
-// Nanopore Spectre Netlist
-// Sebastian Claudiusz Magierowski Nov 23 2025
-// Resistor and Capacitor in Parallel
+// Nanopore Device Model
+// Sebastian Claudiusz Magierowski  Apr 2021 — standalone Spectre port May 2026
 //
-// (p) --,---------- R1 ------------,-- (n)
-//       |                          |
-//       '---------- C1 ------------'
-
+// Three-terminal subcircuit: bias (cis electrode), out (trans / TIA input), ctrl
+// (ctrl) -----------------------------,
+//                                     |
+// (bias) --[AMporeres]--.--[Rpore]--[Rvar]--[Racc]---,-- (out)
+//                       |                            |
+//                       '--[AMporecap]--[Cmem]-------'
+//
+// Conductance: G = (1 + gv*Vctrl) * Gavg,   Gavg = 1/Ravg
+// ONT reference: Ravg~2.25 GOhm, gv=0.5, Cmem=5 pF
+// AMporeres / AMporecap are 0-V ammeters for branch-current probing
+*/
 simulator lang=spectre
 
-// Subcircuit definition
-subckt nanopore (p n)
-  // Resistor in parallel
-  R1 (p n) resistor r=1M
-  // Capacitor in parallel
-  C1 (p n) capacitor c=1p
+ahdl_include "../../../models/verilogA/sm_vcg.va"
+
+subckt nanopore (bias out ctrl)
+parameters gv=0.5 Ravg=2.25G Rp=1 Ra=1 Cm=5p
+  Rvar      (net11 net6  ctrl 0) sm_vcg   gv=gv Ravg=Ravg
+  Rpore     (net6  net036)       resistor r=Rp  isnoisy=no
+  Racc      (out   net11)        resistor r=Ra  isnoisy=no
+  Cmem      (out   net038)       capacitor c=Cm
+  AMporeres (bias  net036)       vsource  mag=0 type=dc
+  AMporecap (bias  net038)       vsource  mag=0 type=dc
 ends nanopore

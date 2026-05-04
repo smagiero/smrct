@@ -1,4 +1,5 @@
 #!/bin/bash
+# Sebastian Claudiusz Magierowski Nov 23 2025
 # Nanopore transient standalone simulation
 #
 # By default this uses "cad-spec", a local wrapper for Cadence spectre used at EMIL.

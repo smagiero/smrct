@@ -1,21 +1,24 @@
 // Nanopore DC I-V Testbench
-// Sebastian Claudiusz Magierowski Nov 23 2025
-// DC sweep analysis
+// Sebastian Claudiusz Magierowski  Nov 23 2025
+//
+// [V1] --- (bias) -- [XP1] -- (out) --- 0
+//                      |
+//                    (ctrl) -- 0
+//
+// DC sweep with ctrl=0 (baseline conductance, no modulation).
+// Sweeps bias terminal from vstart to vstop; measures total pore current via I(V1).
+
 simulator lang=spectre
-// Include the nanopore netlist
+
 include "../../netlist/nanopore.scs"
-// Top-level testbench
-parameters vstart=0 vstop=1 vstep=0.01
 
-// Nanopore instance
-XP1 (p 0) nanopore
+parameters vstart=-1 vstop=1 vstep=0.02 \
+    gv=0.5 Ravg=2.25G Rp=1 Ra=1 Cm=5p
 
-// Voltage source for DC sweep
-V1 (p 0) vsource dc=vstart
+V1  (bias 0)       vsource dc=vstart
+XP1 (bias 0 0) nanopore gv=gv Ravg=Ravg Rp=Rp Ra=Ra Cm=Cm
 
-// DC analysis
 dc1 dc dev=V1 param=dc start=vstart stop=vstop step=vstep
 
-// Save outputs
-save XP1:p XP1:n
+save bias V1:p // I(V1) is the total pore current (positive = into device)
 saveOptions options save=selected

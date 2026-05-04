@@ -1,66 +1,35 @@
 // Nanopore Transient Testbench
-// Sebastian C. Magierowski, Nov 23 2025
-// Standalone Spectre transient analysis for nanopore device
-// Features:
-//   - Parameterized voltage step / pulse excitation
-//   - Transient analysis for RC / capacitive charging behaviour
-//   - Branch current sensing through nanopore via source current
-//   - Node saves for post-processing
+// Sebastian Claudiusz Magierowski  Nov 23 2025
+//
+// [V1] --- (bias) -- [XP1] -- (out) --- 0
+//                      |
+//                    (ctrl) -- 0
+//
+// Voltage step/pulse at bias terminal; ctrl=0 (no modulation).
+// Shows RC charging behaviour through Ravg || Cmem.
 
 simulator lang=spectre
 
-// ---------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------
-parameters \
-    vstep = 0.5      \ // pulse amplitude [V]
-    trise = 1n       \ // rise time [s]
-    tfall = 1n       \ // fall time [s]
-    tpw   = 100n     \ // pulse width [s]
-    tper  = 200n     \ // period [s] (one on, one off)
-    tstop = 500n     \ // simulation stop time [s]
-    tstep = 1n         // suggested print step [s]
-
-// ---------------------------------------------------------------------
-// Include nanopore device netlist
-// ---------------------------------------------------------------------
 include "../../netlist/nanopore.scs"
 
-// ---------------------------------------------------------------------
-// Top-level node naming
-// ---------------------------------------------------------------------
+parameters \
+    vstep = 0.5      \
+    trise = 1n       \
+    tfall = 1n       \
+    tpw   = 100n     \
+    tper  = 200n     \
+    tstop = 500n     \
+    tstep = 100p     \
+    gv=0.5 Ravg=2.25G Rp=1 Ra=1 Cm=5p
+
 global 0
-nodeset v(p)=0
 
-// Nanopore instance (two-terminal device)
-// Internal node names (e.g. p, n) are defined inside nanopore.scs
-XP1 (p 0) nanopore
+V1  (bias 0) vsource type=pulse \
+    val0=0 val1=vstep rise=trise fall=tfall width=tpw period=tper delay=0
 
-// ---------------------------------------------------------------------
-// Excitation: voltage step / pulse at node p
-// ---------------------------------------------------------------------
-// 0 -> vstep pulse, 50% duty cycle by default
-V1 (p 0) vsource type=pulse \
-    val0=0       \
-    val1=vstep   \
-    rise=trise   \
-    fall=tfall   \
-    width=tpw    \
-    period=tper  \
-    delay=0
+XP1 (bias 0 0) nanopore gv=gv Ravg=Ravg Rp=Rp Ra=Ra Cm=Cm
 
-// ---------------------------------------------------------------------
-// Transient analysis
-// ---------------------------------------------------------------------
 tran1 tran stop=tstop step=tstep
 
-// ---------------------------------------------------------------------
-// Saved quantities for post-processing
-// ---------------------------------------------------------------------
-// Save:
-//  - node voltage at p
-//  - branch current through V1 (equal to nanopore current)
-//  - internal nanopore nodes (if defined as p/n inside subckt)
-save V(p) I(V1) XP1:p XP1:n
-
+save bias V1:p
 saveOptions options save=selected
