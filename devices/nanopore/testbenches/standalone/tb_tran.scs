@@ -1,9 +1,11 @@
-// Nanopore Transient Testbench
+// Nanopore Transient Testbench: devices/nanopore/testbenches/standalone/tb_tran.scs
 // Sebastian Claudiusz Magierowski  Nov 23 2025
 //
 // [V1] --- (bias) -- [XP1] -- (out) --- 0
 //                      |
 //                    (ctrl) -- 0
+//
+// Connect a pulsing voltage to cis, ground trans and ctrl and see what happens.
 //
 // Voltage step/pulse at bias terminal; ctrl=0 (no modulation).
 // Shows RC charging behaviour through Ravg || Cmem.

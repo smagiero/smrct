@@ -7,8 +7,8 @@ membrane capacitance, and series access resistances.
 
 ```
 bias ──[AMporeres]──┬── Rpore ── Rvar(VCG) ── Racc ──┬── out
-                    │                                  │
-                  [AMporecap]── Cmem ─────────────────┘
+                    │                                │
+                  [AMporecap]──── Cmem ──────────────┘
 ```
 
 Three terminals: `bias` (cis electrode), `out` (trans / TIA input), `ctrl` (modulation).

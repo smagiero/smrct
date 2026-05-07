@@ -1,7 +1,9 @@
 // Nanopore Device Model
+// devices/nanopore/netlist/nanopore.scs
 // Sebastian Claudiusz Magierowski  Apr 2021 — standalone Spectre port May 2026
 //
-// Three-terminal subcircuit: bias (cis electrode), out (trans / TIA input), ctrl
+// A model of the nanopore device
+//
 // (ctrl) -----------------------------,
 //                                     |
 // (bias) --[AMporeres]--.--[Rpore]--[Rvar]--[Racc]---,-- (out)
@@ -11,17 +13,17 @@
 // Conductance: G = (1 + gv*Vctrl) * Gavg,   Gavg = 1/Ravg
 // ONT reference: Ravg~2.25 GOhm, gv=0.5, Cmem=5 pF
 // AMporeres / AMporecap are 0-V ammeters for branch-current probing
-*/
+
 simulator lang=spectre
 
 ahdl_include "../../../models/verilogA/sm_vcg.va"
 
 subckt nanopore (bias out ctrl)
 parameters gv=0.5 Ravg=2.25G Rp=1 Ra=1 Cm=5p
-  Rvar      (net11 net6  ctrl 0) sm_vcg   gv=gv Ravg=Ravg
-  Rpore     (net6  net036)       resistor r=Rp  isnoisy=no
-  Racc      (out   net11)        resistor r=Ra  isnoisy=no
-  Cmem      (out   net038)       capacitor c=Cm
-  AMporeres (bias  net036)       vsource  mag=0 type=dc
-  AMporecap (bias  net038)       vsource  mag=0 type=dc
+  Rvar      (net11 net6  ctrl 0)       sm_vcg    gv=gv Ravg=Ravg
+  Rpore     (net6  net036) resistor  r=Rp  isnoisy=no
+  Racc      (out   net11)  resistor  r=Ra  isnoisy=no
+  Cmem      (out   net038) capacitor c=Cm
+  AMporeres (bias  net036) vsource   mag=0 type=dc
+  AMporecap (bias  net038) vsource   mag=0 type=dc
 ends nanopore

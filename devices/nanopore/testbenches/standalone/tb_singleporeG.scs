@@ -1,4 +1,4 @@
-// Nanopore + CT TIA Testbench
+// Nanopore + CT TIA Testbench: devices/nanopore/testbenches/standalone/tb_singleporeG.scs
 // Sebastian Claudiusz Magierowski  Apr 10 2021 — standalone Spectre port May 3 2026
 //
 // Topology:
@@ -40,7 +40,7 @@ parameters \
     Ravg=2.25G  Rp=1  Ra=1  gv=0.5  Cm=5p  \
     Vbias=600m  Vref=800m               \
     ft=1k  Tp=1/ft                      \
-    tstop=10m  tstep=100n
+    tstop=100m  tstep=100n
 
 // -----------------------------------------------------------------------
 // Nanopore instance

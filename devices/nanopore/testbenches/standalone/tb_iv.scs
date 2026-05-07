@@ -1,9 +1,11 @@
-// Nanopore DC I-V Testbench
+// Nanopore DC I-V Testbench: devices/nanopore/testbenches/standalone/tb_iv.scs
 // Sebastian Claudiusz Magierowski  Nov 23 2025
 //
 // [V1] --- (bias) -- [XP1] -- (out) --- 0
 //                      |
 //                    (ctrl) -- 0
+//
+// Connect a DC voltage to your cis, ground trans and ctrl and see what happens.
 //
 // DC sweep with ctrl=0 (baseline conductance, no modulation).
 // Sweeps bias terminal from vstart to vstop; measures total pore current via I(V1).
