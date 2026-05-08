@@ -76,16 +76,18 @@ def plot_psd(ipore, vout, out_dir):
     print(f"  IporeStdDev_pA : {sigma_I*1e12:.3f} pA  (reference: 30.853 pA)")
     print(f"  Vout1StdDev    : {sigma_V*1e3:.3f} mV  (reference: 30.790 mV)")
 
-    # Normalised PSD: signal / (2*sigma) matches original SKILL normalisation.
-    f_I, S_I = welch(ip / (2 * sigma_I), fs=FSAMP, window='boxcar',
+    # Normalised double-sided PSD: (ft/2) * S_one / sigma^2 = ft * S_two / sigma^2
+    # Dividing by sigma gives unit-variance input; the (FT/2) factor converts
+    # scipy's one-sided S_one to the two-sided S_two (S_one = 2*S_two for f>0).
+    f_I, S_I = welch(ip / sigma_I, fs=FSAMP, window='boxcar',
                      nperseg=WINSIZE, detrend=False)
-    f_V, S_V = welch(vo / (2 * sigma_V), fs=FSAMP, window='boxcar',
+    f_V, S_V = welch(vo / sigma_V, fs=FSAMP, window='boxcar',
                      nperseg=WINSIZE, detrend=False)
 
-    norm_I_dB = 20 * np.log10(FT * S_I + 1e-30)
-    norm_V_dB = 20 * np.log10(FT * S_V + 1e-30)
+    norm_I_dB = 20 * np.log10((FT/2) * S_I + 1e-30)
+    norm_V_dB = 20 * np.log10((FT/2) * S_V + 1e-30)
 
-    # Theoretical double-sided normalised Lorentzian:
+    # Theoretical double-sided normalised Lorentzian for a toggle RTS:
     #   ft * S_two(f) / sigma^2 = 1 / (1 + (pi*f/ft)^2)
     # DC value: 0 dB.  Corner (−6 dB20): f = ft/pi ~ 318 Hz.
     f_th = np.logspace(np.log10(f_I[1]), np.log10(FSAMP/2), 2000)

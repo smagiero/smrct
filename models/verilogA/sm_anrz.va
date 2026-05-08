@@ -58,8 +58,8 @@ parameter real tfall=1n;
 
       $bound_step(tnext); // specify the maximum time allowed between time points
 
-      bit = abs($random(iseed)) & 1; // gen 32-b random # (it will be even or odd)
       @ ( timer( next )) begin
+         bit = 1 - bit; // explicit toggle: guaranteed state change at every event
          vout_val = (l_hi - l_lo) * bit + l_lo;
 	 tnext = $rdist_exponential(iseed, Tp);
 	 next = next + tnext;
