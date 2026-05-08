@@ -76,14 +76,13 @@ def plot_psd(ipore, vout, out_dir):
     print(f"  IporeStdDev_pA : {sigma_I*1e12:.3f} pA  (reference: 30.853 pA)")
     print(f"  Vout1StdDev    : {sigma_V*1e3:.3f} mV  (reference: 30.790 mV)")
 
-    # Normalised double-sided PSD: (ft/2) * S_one / sigma^2 = ft * S_two / sigma^2
-    # Dividing by sigma gives unit-variance input; the (FT/2) factor converts
-    # scipy's one-sided S_one to the two-sided S_two (S_one = 2*S_two for f>0).
-    f_I, S_I = welch(ip / sigma_I, fs=FSAMP, window='boxcar',
-                     nperseg=WINSIZE, detrend=False)
-    f_V, S_V = welch(vo / sigma_V, fs=FSAMP, window='boxcar',
-                     nperseg=WINSIZE, detrend=False)
 
+    # Divide by sigma, giving signal unit variance, so the Lorentzian theory is 0 dB at DC and -6 dB at corner.
+    # i.e., one-sided returned by default by welch gives: ∫₀^{f_Nyq} S_I(f) df = 1 
+    f_I, S_I = welch(ip / sigma_I, fs=FSAMP, window='boxcar', nperseg=WINSIZE, detrend=False)
+    f_V, S_V = welch(vo / sigma_V, fs=FSAMP, window='boxcar', nperseg=WINSIZE, detrend=False)
+    # Normalised double-sided PSD: (ft/2) * S_one / sigma^2 = ft * S_two / sigma^2
+    # the (FT/2) factor converts scipy's one-sided S_one to the two-sided S_two (S_one = 2*S_two for f>0).
     norm_I_dB = 20 * np.log10((FT/2) * S_I + 1e-30)
     norm_V_dB = 20 * np.log10((FT/2) * S_V + 1e-30)
 
