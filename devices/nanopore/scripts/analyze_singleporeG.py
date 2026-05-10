@@ -6,19 +6,17 @@ Computes:
   - Time-domain traces: Ipore (pA) and Vout (mV)
   - Normalised pore-current PSD vs theoretical Lorentzian for a random telegraph signal
 
-PSF parameters assumed (must match tb_singleporeG.scs):
-  fsamp  = 25*ft = 25 kHz   (output strobe period = 40 µs)
-  samples = 65536            (2^16, gives clean FFT)
-  winsize = samples/32 = 2048 (Welch segment length, ~32 averages)
-  Skip first 1 % of samptime before computing statistics and PSD.
+Simulation parameters (ft, fsamp, samples) are parsed directly from tb_singleporeG.scs,
+which is the single source of truth. winsize = samples/32 (~32 Welch averages).
+First 1% of samptime is skipped before computing statistics and PSD.
 
-Theoretical normalised PSD for a Poisson random telegraph signal:
-  ft * S_norm(f) = 1 / (1 + (pi*f/ft)^2)
-  Corner at f = ft/pi ~ 318 Hz; -20 dB/decade above corner (dB20 scale).
-  Reference stored value from original Virtuoso run: IporeStdDev_pA = 30.853 pA.
+Theoretical normalised PSD for a Poisson random telegraph signal with explicit toggle:
+  ft * S_two(f) / σ² = 1 / (1 + (π·f/ft)²)
+  Corner at f = ft/π; DC value: 0 dB; -20 dB/decade above corner (dB20 scale).
 """
 
 import os
+import re    # for parsing Spectre netlist parameters with suffixes (e.g. 1k, 2.25G)
 import argparse
 import numpy as np
 import matplotlib
@@ -32,14 +30,60 @@ DEFAULT_RAW = os.path.join(
     SCRIPT_DIR,
     "../results/standalone/singleporeG/tb_singleporeG.raw/tran1.tran.tran",
 )
+DEFAULT_SCS = os.path.join(
+    SCRIPT_DIR,
+    "../testbenches/standalone/tb_singleporeG.scs",
+)
 OUT_DIR = os.path.join(SCRIPT_DIR, "../results/standalone/singleporeG")
 
-# Match tb_singleporeG.scs parameters
-FT      = 1e3        # mean event rate (Hz)
-FSAMP   = 25 * FT    # output sample rate (Hz)
-SAMPLES = 65536      # total output samples
-WINSIZE = SAMPLES // 32   # Welch segment length (2048)
-SKIP    = int(0.01 * SAMPLES)  # drop first 1 % (~655 samples) for settling
+_SPECTRE_SUFFIXES = {
+    'f': 1e-15, 'p': 1e-12, 'n': 1e-9, 'u': 1e-6,
+    'm': 1e-3,  'k': 1e3,   'M': 1e6,  'G': 1e9,  'T': 1e12,
+}
+
+
+def parse_spectre_params(scs_path):
+    """Return dict of floats from all 'parameters' lines in a Spectre netlist."""
+    with open(scs_path) as fh:
+        text = fh.read()
+    text = re.sub(r'\\\n', ' ', text)  # join backslash-continuation lines
+
+    def _sub_suffix(m):
+        return f"({m.group(1)}*{_SPECTRE_SUFFIXES[m.group(2)]})"
+
+    params = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith('parameters'):
+            continue
+        rest = re.sub(r'//.*', '', line[len('parameters'):]).strip()
+        for token in re.split(r'\s+', rest):
+            if '=' not in token:
+                continue
+            key, _, val_str = token.partition('=')
+            key = key.strip()
+            if not key or not val_str.strip():
+                continue
+            # Replace numeric literals with Spectre suffix (e.g. 1k → 1e3, 2.25G → 2.25e9)
+            val_py = re.sub(
+                r'(\d+\.?\d*(?:[eE][+-]?\d+)?)([fpnumkMGT])\b',
+                _sub_suffix,
+                val_str.strip(),
+            )
+            try:
+                params[key] = float(eval(val_py, {"__builtins__": {}}, params))
+            except Exception:
+                pass
+    return params
+
+
+# Load simulation parameters from testbench — single source of truth
+_p      = parse_spectre_params(DEFAULT_SCS)
+FT      = _p['ft']            # mean event rate (Hz)
+FSAMP   = _p['fsamp']         # output sample rate (Hz)
+SAMPLES = int(_p['samples'])  # total output samples
+WINSIZE = SAMPLES // 32       # Welch segment length (~32 averages)
+SKIP    = int(0.01 * SAMPLES) # drop first 1% for settling
 
 
 def load(raw_path):
@@ -73,22 +117,19 @@ def plot_psd(ipore, vout, out_dir):
 
     sigma_I = np.std(ip)
     sigma_V = np.std(vo)
-    print(f"  IporeStdDev_pA : {sigma_I*1e12:.3f} pA  (reference: 30.853 pA)")
-    print(f"  Vout1StdDev    : {sigma_V*1e3:.3f} mV  (reference: 30.790 mV)")
+    print(f"  IporeStdDev_pA : {sigma_I*1e12:.3f} pA")
+    print(f"  Vout1StdDev    : {sigma_V*1e3:.3f} mV")
 
-
-    # Divide by sigma, giving signal unit variance, so the Lorentzian theory is 0 dB at DC and -6 dB at corner.
-    # i.e., one-sided returned by default by welch gives: ∫₀^{f_Nyq} S_I(f) df = 1 
+    # Divide by sigma → unit variance; welch returns one-sided S_one.
+    # Multiply by FT/2 → double-sided ft·S_two/σ²  (S_one = 2·S_two for f > 0).
     f_I, S_I = welch(ip / sigma_I, fs=FSAMP, window='boxcar', nperseg=WINSIZE, detrend=False)
     f_V, S_V = welch(vo / sigma_V, fs=FSAMP, window='boxcar', nperseg=WINSIZE, detrend=False)
-    # Normalised double-sided PSD: (ft/2) * S_one / sigma^2 = ft * S_two / sigma^2
-    # the (FT/2) factor converts scipy's one-sided S_one to the two-sided S_two (S_one = 2*S_two for f>0).
     norm_I_dB = 20 * np.log10((FT/2) * S_I + 1e-30)
     norm_V_dB = 20 * np.log10((FT/2) * S_V + 1e-30)
 
     # Theoretical double-sided normalised Lorentzian for a toggle RTS:
-    #   ft * S_two(f) / sigma^2 = 1 / (1 + (pi*f/ft)^2)
-    # DC value: 0 dB.  Corner (−6 dB20): f = ft/pi ~ 318 Hz.
+    #   ft·S_two(f)/σ² = 1 / (1 + (π·f/ft)²)
+    # DC: 0 dB.  Corner (−6 dB20): f = ft/π.
     f_th = np.logspace(np.log10(f_I[1]), np.log10(FSAMP/2), 2000)
     S_th_dB = 20 * np.log10(1.0 / (1 + (np.pi * f_th / FT)**2))
 

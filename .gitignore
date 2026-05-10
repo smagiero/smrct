@@ -74,3 +74,13 @@ master.tag
 DVEfiles/
 CLAUDE.md
 refs/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
