@@ -1,0 +1,95 @@
+// Nanopore + DT TIA Testbench: devices/nanopore/testbenches/standalone/tb_singleporeG_DT.scs
+// Sebastian Claudiusz Magierowski May 2026
+//
+// Derived from original Virtuoso tb_singleporeG_DT schematic (Aug 2024).
+// Vestigial schematic probes (Vsquare, Vsin, Vramp, sw1, Rbias, R0) removed.
+//
+// Topology: same pore as tb_singleporeG.scs, but the CT feedback resistor Rf is
+// replaced by a DT reset switch (sm_sw_no) in parallel with Cf (integrate-and-dump):
+//
+//   Reset  phase (clk=Vclk_hi, duration (1-Ki)*Ts): sw closes, Cf discharged, out1→Vref
+//   Integrate phase (clk=0,    duration Ki*Ts):      sw open, Ipore integrates onto Cf,
+//     out1 ramps by ΔV = −Ipore·Ki·Ts/Cf
+//
+//         ,------Cf----,
+//         |--SWrst(clk)|
+// Vctrl   |            |
+// Vbias -- PORE1 ---  -OpAmp \   |
+//          |          \      |
+//          Ci          X-----+-,
+//                     /       |
+// Vref  ---- +OpAmp /         Cl
+//
+// Key design variables:
+//   Nanopore : gv, Ravg, Rp, Ra, Cm
+//   Biasing  : Vbias (cis), Vref (trans / TIA reference)
+//   DT TIA   : Cf, Ci, Cl
+//   Clock    : Ts (period), Ki (integration fraction)
+//   Stimulus : ft (mean event rate), Tp=1/ft
+
+simulator lang=spectre
+
+ahdl_include "../../../../models/verilogA/sm_anrz.va"
+ahdl_include "../../../../models/verilogA/sm_sw_no.va"
+include "../../netlist/nanopore.scs"
+
+// -----------------------------------------------------------------------
+// Parameters
+// -----------------------------------------------------------------------
+parameters \
+    Vclk_hi=1.0  Ki=0.8                     \
+    Cf=20f  Ci=5p  Cl=1f                    \
+    Ravg=2.25G  Rp=1  Ra=1  gv=0.5  Cm=1f  \
+    Vbias=600m  Vref=800m                   \
+    ft=1k  Tp=1/ft                          \
+    Ts=1/(2*ft)                             \
+    samples=65536  fsamp=25*ft              \
+    samptime=samples/fsamp                  \
+    tstop=1.05*samptime  tstep=1/fsamp
+
+// -----------------------------------------------------------------------
+// Nanopore instance
+// -----------------------------------------------------------------------
+Vbias (bias 0) vsource dc=Vbias type=dc
+Vref  (iplus 0) vsource dc=Vref  type=dc
+
+XP1 (bias out ctrl) nanopore gv=gv Ravg=Ravg Rp=Rp Ra=Ra Cm=Cm
+
+// -----------------------------------------------------------------------
+// Pore output ammeter -> TIA virtual ground
+// -----------------------------------------------------------------------
+AMporeout (out net28) vsource mag=0 type=dc
+
+// -----------------------------------------------------------------------
+// DT TIA: ideal op-amp (VCVS) + Cf feedback + sw_no reset + Ci/Cl parasitics
+// -----------------------------------------------------------------------
+OpAmp  (net034 0 iplus net28) vcvs gain=1e6
+Iprobe (net034 out1)          iprobe
+Cf     (net28 out1)           capacitor c=Cf
+SWrst  (net28 out1 clk)       sm_sw_no vth=0.5 ron=1 roff=1e12 \
+    tconv=0 trise=1n tfall=1n slack=1n vtol=10m
+Ci     (net28 0)              capacitor c=Ci
+Cl     (out1  0)              capacitor c=Cl
+
+// -----------------------------------------------------------------------
+// Reset clock (Vclk_hi = reset/short Cf, 0 = integrate)
+// -----------------------------------------------------------------------
+Vclk (clk 0) vsource type=pulse val0=0 val1=Vclk_hi \
+    period=Ts delay=Ts/10 rise=Ts/100 fall=Ts/100 width=(1-Ki)*Ts
+
+// -----------------------------------------------------------------------
+// Stimulus: random exponential pulse train on ctrl
+// -----------------------------------------------------------------------
+Vrand (ctrl) exp_pulse_train_2 Tp=Tp seed=21 l_hi=1 l_lo=-1 tdel=0 \
+    trise=1n tfall=1n
+
+// -----------------------------------------------------------------------
+// Simulation
+// -----------------------------------------------------------------------
+simulatorOptions options reltol=1e-3 vabstol=1e-6 iabstol=1e-12 \
+    temp=27 tnom=27 maxnotes=5 maxwarns=5
+
+tran1 tran stop=tstop step=tstep strobeperiod=tstep errpreset=moderate annotate=status
+
+save out1 AMporeout:p clk
+saveOptions options save=selected

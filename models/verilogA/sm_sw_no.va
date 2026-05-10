@@ -1,0 +1,55 @@
+// Normally-open switch
+// Sebastian Claudiusz Magierowski May 10 2026
+//
+// Based on bmslib/sw_no (Cadence IC06.18.020, Affirma Modelwriter 2.23).
+// Adapted: port names (p,n,ctrl), vth default 0.5 V, roff default 1 TOhm.
+//
+// ports: p, n  (switched path)
+//        ctrl  (control voltage, referenced to ground)
+//
+// Open  (normally): V(ctrl) < vth  →  rout = roff
+// Closed:           V(ctrl) >= vth →  rout = ron
+//
+// Resistance transitions logarithmically so midpoint = geometric mean of ron/roff.
+// cross() detects both threshold edges so the solver steps to them exactly.
+//
+// Default roff=1T is intentionally large: with Ipore~300pA and Vout~800mV,
+// roff must exceed ~3GOhm to keep leakage below 1% of signal current.
+//
+// INSTANCE parameters
+//   ron   = closed (on)  resistance [Ohm]
+//   roff  = open  (off) resistance [Ohm]
+//   vth   = control threshold voltage [V]
+//   trise = off-to-on transition time [s]
+//   tfall = on-to-off transition time [s]
+//   tconv = delay from threshold crossing to start of transition [s]
+//   slack = time overstep considered negligible for threshold crossing [s]
+//   vtol  = voltage overstep considered negligible for threshold crossing [V]
+
+`include "discipline.h"
+`include "constants.h"
+
+module sm_sw_no(p, n, ctrl);
+  inout    p, n;
+  input    ctrl;
+  electrical p, n, ctrl;
+
+  parameter real vth   = 0.5;
+  parameter real ron   = 1.0    from (0:inf);
+  parameter real roff  = 1.0T   from (ron:inf);
+  parameter real tconv = 0.0n   from [0:inf);
+  parameter real trise = 4.0n   from (0:inf);
+  parameter real tfall = 4.0n   from (0:inf);
+  parameter real slack = 1n     from (0:inf);
+  parameter real vtol  = 10.0m  from (0:inf);
+
+  real  rout;
+  integer rstate;
+
+  analog begin
+    rstate = (V(ctrl) >= vth);
+    @(cross(V(ctrl) - vth, 0, slack, vtol));
+    rout = roff * pow(ron/roff, transition(rstate, tconv, trise, tfall));
+    I(p,n) <+ V(p,n) / rout;
+  end
+endmodule
