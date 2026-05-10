@@ -60,18 +60,12 @@ def parse_spectre_params(scs_path):
         if not line.startswith('parameters'):
             continue
         rest = re.sub(r'//.*', '', line[len('parameters'):]).strip()
-        for token in re.split(r'\s+', rest):
-            if '=' not in token:
-                continue
-            key, _, val_str = token.partition('=')
-            key = key.strip()
-            if not key or not val_str.strip():
-                continue
-            # Replace numeric literals with Spectre suffix (e.g. 1k → 1e3, 2.25G → 2.25e9)
+        for m in re.finditer(r'(\w+)\s*=\s*(\S+)', rest):
+            key, val_str = m.group(1), m.group(2)
             val_py = re.sub(
                 r'(\d+\.?\d*(?:[eE][+-]?\d+)?)([fpnumkMGT])\b',
                 _sub_suffix,
-                val_str.strip(),
+                val_str,
             )
             try:
                 params[key] = float(eval(val_py, {"__builtins__": {}}, params))
