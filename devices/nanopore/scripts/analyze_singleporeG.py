@@ -22,10 +22,13 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from scipy.signal import welch
 from psf_utils import PSF
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR   = os.path.join(SCRIPT_DIR, "../../..")
+WATERMARK  = os.path.join(REPO_DIR, "docs", "emil_tran.png")
 DEFAULT_RAW = os.path.join(
     SCRIPT_DIR,
     "../results/standalone/singleporeG/tb_singleporeG.raw/tran1.tran.tran",
@@ -86,6 +89,13 @@ WINSIZE = SAMPLES // 32       # Welch segment length (~32 averages)
 SKIP    = int(0.01 * SAMPLES) # drop first 1% for settling
 
 
+def _add_watermark(fig):
+    if os.path.exists(WATERMARK):
+        wm_ax = fig.add_axes([0.1, 0.15, 0.75, 0.75], anchor='C', zorder=10)
+        wm_ax.imshow(mpimg.imread(WATERMARK), alpha=0.08)
+        wm_ax.axis('off')
+
+
 def load(raw_path):
     psf = PSF(raw_path)
     t     = psf.get_sweep().abscissa
@@ -105,6 +115,7 @@ def plot_time(t, ipore, vout, out_dir):
     axes[1].set_ylabel("Pore Current (pA)")
     axes[1].grid(True)
     fig.tight_layout()
+    _add_watermark(fig)
     path = os.path.join(out_dir, "singleporeG_time.png")
     fig.savefig(path, dpi=150)
     plt.close(fig)
@@ -152,6 +163,7 @@ def plot_psd(ipore, vout, out_dir):
         ax.grid(True, which='both', ls=':')
 
     fig.tight_layout()
+    _add_watermark(fig)
     path = os.path.join(out_dir, "singleporeG_psd.png")
     fig.savefig(path, dpi=150)
     plt.close(fig)

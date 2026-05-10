@@ -3,6 +3,10 @@
 Behavioral Spectre model of a solid-state nanopore with voltage-controlled conductance,
 membrane capacitance, and series access resistances.
 
+<p align="left">
+  <img src="../../docs/nanopore_psd_example.png" width="400" />
+</p>
+
 ## Model topology
 
 ```
