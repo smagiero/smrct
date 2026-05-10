@@ -1,5 +1,5 @@
 // Nanopore + DT TIA Testbench: devices/nanopore/testbenches/standalone/tb_singleporeG_DT.scs
-// Sebastian Claudiusz Magierowski May 2026
+// Sebastian Claudiusz Magierowski May 10 2026
 //
 // Derived from original Virtuoso tb_singleporeG_DT schematic (Aug 2024).
 // Vestigial schematic probes (Vsquare, Vsin, Vramp, sw1, Rbias, R0) removed.
@@ -11,14 +11,14 @@
 //   Integrate phase (clk=0,    duration Ki*Ts):      sw open, Ipore integrates onto Cf,
 //     out1 ramps by ΔV = −Ipore·Ki·Ts/Cf
 //
-//         ,------Cf----,
-//         |--SWrst(clk)|
-// Vctrl   |            |
-// Vbias -- PORE1 ---  -OpAmp \   |
-//          |          \      |
-//          Ci          X-----+-,
-//                     /       |
-// Vref  ---- +OpAmp /         Cl
+//                 ,------Cf------,
+//                 |--SWrst(clk)--|
+// Vctrl ----,     |              |
+// Vbias -- PORE1 --- -OpAmp \    |
+//                 |          \   |
+//                 Ci          X--+-,
+//                            /     |
+// Vref  ------------ +OpAmp /      Cl
 //
 // Key design variables:
 //   Nanopore : gv, Ravg, Rp, Ra, Cm
@@ -58,17 +58,17 @@ XP1 (bias out ctrl) nanopore gv=gv Ravg=Ravg Rp=Rp Ra=Ra Cm=Cm
 // -----------------------------------------------------------------------
 // Pore output ammeter -> TIA virtual ground
 // -----------------------------------------------------------------------
-AMporeout (out net28) vsource mag=0 type=dc
+AMporeout (out amp_inp) vsource mag=0 type=dc
 
 // -----------------------------------------------------------------------
 // DT TIA: ideal op-amp (VCVS) + Cf feedback + sw_no reset + Ci/Cl parasitics
 // -----------------------------------------------------------------------
-OpAmp  (net034 0 iplus net28) vcvs gain=1e6
+OpAmp  (net034 0 iplus amp_inp) vcvs gain=1e6
 Iprobe (net034 out1)          iprobe
-Cf     (net28 out1)           capacitor c=Cf
-SWrst  (net28 out1 clk)       sm_sw_no vth=0.5 ron=1 roff=1e12 \
+Cf     (amp_inp out1)         capacitor c=Cf
+SWrst  (amp_inp out1 clk)     sm_sw_no vth=0.5 ron=1 roff=1e12 \
     tconv=0 trise=1n tfall=1n slack=1n vtol=10m
-Ci     (net28 0)              capacitor c=Ci
+Ci     (amp_inp 0)            capacitor c=Ci
 Cl     (out1  0)              capacitor c=Cl
 
 // -----------------------------------------------------------------------
