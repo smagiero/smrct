@@ -90,6 +90,29 @@ def _add_watermark(fig):
         wm_ax.axis('off')
 
 
+_SI_PREFIXES = [
+    (1e12,'T'),(1e9,'G'),(1e6,'M'),(1e3,'k'),
+    (1,''),(1e-3,'m'),(1e-6,'µ'),(1e-9,'n'),(1e-12,'p'),(1e-15,'f'),
+]
+
+def _si(val, unit=''):
+    """Format val with the largest SI prefix that keeps the coefficient ≥ 1."""
+    for thr, pre in _SI_PREFIXES:
+        if abs(val) >= thr * 0.9995:
+            return f"{val/thr:g} {pre}{unit}".rstrip()
+    return f"{val:g}{' '+unit if unit else ''}"
+
+
+def _param_text(p):
+    return (
+        f"ft={_si(p['ft'],'Hz')}  Ravg={_si(p['Ravg'],'Ω')}  "
+        f"Cm={_si(p['Cm'],'F')}  Vbias={_si(p['Vbias'],'V')}\n"
+        f"Rf={_si(p['Rf'],'Ω')}  Cf={_si(p['Cf'],'F')}  "
+        f"Ci={_si(p['Ci'],'F')}  Cl={_si(p['Cl'],'F')}  "
+        f"fsamp={_si(p['fsamp'],'Hz')}  N={int(p['samples'])}"
+    )
+
+
 def load(raw_path):
     psf = PSF(raw_path)
     t     = psf.get_sweep().abscissa
@@ -102,13 +125,17 @@ def plot_time(t, ipore, vout, out_dir):
     fig, axes = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
     axes[0].plot(t * 1e3, vout * 1e3, lw=0.6)
     axes[0].set_ylabel("TIA Output (mV)")
-    axes[0].set_title(f"Nanopore + CT TIA  (Rf=1GΩ, ft={FT/1e3:.0f} kHz, {len(t)} pts)")
+    axes[0].set_title(
+        f"Nanopore + CT TIA  (Rf={_si(_p['Rf'],'Ω')}, ft={_si(_p['ft'],'Hz')}, {len(t)} pts)"
+    )
     axes[0].grid(True)
     axes[1].plot(t * 1e3, ipore * 1e12, lw=0.6)
     axes[1].set_xlabel("Time (ms)")
     axes[1].set_ylabel("Pore Current (pA)")
     axes[1].grid(True)
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.text(0.01, 0.01, _param_text(_p), fontsize=7.5, va='bottom', ha='left',
+             family='monospace', color='0.35')
     _add_watermark(fig)
     path = os.path.join(out_dir, "singleporeG_time.png")
     fig.savefig(path, dpi=150)
@@ -156,7 +183,9 @@ def plot_psd(ipore, vout, out_dir):
         ax.legend(fontsize=8)
         ax.grid(True, which='both', ls=':')
 
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.text(0.01, 0.01, _param_text(_p), fontsize=7.5, va='bottom', ha='left',
+             family='monospace', color='0.35')
     _add_watermark(fig)
     path = os.path.join(out_dir, "singleporeG_psd.png")
     fig.savefig(path, dpi=150)
