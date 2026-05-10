@@ -105,7 +105,7 @@ def _si(val, unit=''):
 
 def _param_text(p):
     return (
-        f"ft={_si(p['ft'],'Hz')}  Ravg={_si(p['Ravg'],'Ω')}  "
+        f"ft={_si(p['ft'],'Hz')}  Ravg={_si(p['Ravg'],'Ω')}  gv={p['gv']:g}  "
         f"Cm={_si(p['Cm'],'F')}  Vbias={_si(p['Vbias'],'V')}\n"
         f"Rf={_si(p['Rf'],'Ω')}  Cf={_si(p['Cf'],'F')}  "
         f"Ci={_si(p['Ci'],'F')}  Cl={_si(p['Cl'],'F')}  "

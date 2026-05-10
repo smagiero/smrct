@@ -65,6 +65,28 @@ def _add_watermark(fig):
         wm_ax.axis('off')
 
 
+_SI_PREFIXES = [
+    (1e12,'T'),(1e9,'G'),(1e6,'M'),(1e3,'k'),
+    (1,''),(1e-3,'m'),(1e-6,'µ'),(1e-9,'n'),(1e-12,'p'),(1e-15,'f'),
+]
+
+def _si(val, unit=''):
+    """Format val with the largest SI prefix that keeps the coefficient ≥ 1."""
+    for thr, pre in _SI_PREFIXES:
+        if abs(val) >= thr * 0.9995:
+            return f"{val/thr:g} {pre}{unit}".rstrip()
+    return f"{val:g}{' '+unit if unit else ''}"
+
+
+def _param_text(p):
+    return (
+        f"Ravg={_si(p['Ravg'],'Ω')}  gv={p['gv']:g}  "
+        f"Rp={_si(p['Rp'],'Ω')}  Ra={_si(p['Ra'],'Ω')}  Cm={_si(p['Cm'],'F')}\n"
+        f"vstep={_si(p['vstep'],'V')}  tpw={_si(p['tpw'],'s')}  "
+        f"tper={_si(p['tper'],'s')}  tstop={_si(p['tstop'],'s')}"
+    )
+
+
 # Load simulation parameters from testbench — single source of truth
 _p   = parse_spectre_params(DEFAULT_SCS)
 RAVG = _p['Ravg']
@@ -93,7 +115,9 @@ def main():
     axes[1].set_ylabel("Pore Current (nA)")
     axes[1].grid(True)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.text(0.01, 0.01, _param_text(_p), fontsize=7.5, va='bottom', ha='left',
+             family='monospace', color='0.35')
     _add_watermark(fig)
     os.makedirs(OUT_DIR, exist_ok=True)
     out = os.path.join(OUT_DIR, "tran.png")
