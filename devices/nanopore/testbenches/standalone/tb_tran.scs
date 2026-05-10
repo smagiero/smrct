@@ -16,11 +16,11 @@ include "../../netlist/nanopore.scs"
 
 parameters \
     vstep = 0.5      \
-    trise = 1n       \
-    tfall = 1n       \
-    tpw   = 100n     \
-    tper  = 200n     \
-    tstop = 500n     \
+    trise = 0.1u       \
+    tfall = 0.1u       \
+    tpw   = 1u     \
+    tper  = 2u     \
+    tstop = 5u     \
     tstep = 100p     \
     gv=0.5 Ravg=2.25G Rp=1 Ra=1 Cm=5p
 

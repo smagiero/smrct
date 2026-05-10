@@ -82,8 +82,8 @@ def _param_text(p):
     return (
         f"Ravg={_si(p['Ravg'],'Ω')}  gv={p['gv']:g}  "
         f"Rp={_si(p['Rp'],'Ω')}  Ra={_si(p['Ra'],'Ω')}  Cm={_si(p['Cm'],'F')}\n"
-        f"vstep={_si(p['vstep'],'V')}  tpw={_si(p['tpw'],'s')}  "
-        f"tper={_si(p['tper'],'s')}  tstop={_si(p['tstop'],'s')}"
+        f"vstep={_si(p['vstep'],'V')}  trise={_si(p['trise'],'s')}  tfall={_si(p['tfall'],'s')}  "
+        f"tpw={_si(p['tpw'],'s')}  tper={_si(p['tper'],'s')}  tstop={_si(p['tstop'],'s')}"
     )
 
 
